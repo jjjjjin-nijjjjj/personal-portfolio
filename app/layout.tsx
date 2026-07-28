@@ -21,6 +21,13 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
+          rel="preload"
+          href="/characters/character-1.webp"
+          as="image"
+          type="image/webp"
+          fetchPriority="high"
+        />
+        <link
           href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />

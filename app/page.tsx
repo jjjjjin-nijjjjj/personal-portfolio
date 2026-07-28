@@ -5,22 +5,22 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 
 const IMAGES = [
   {
-    src: "https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/1.02464a56.png",
+    src: "/characters/character-1.webp",
     bg: "#F4845F",
     panel: "#F79B7F",
   },
   {
-    src: "https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/2.b977faab.png",
+    src: "/characters/character-2.webp",
     bg: "#6BBF7A",
     panel: "#85CC92",
   },
   {
-    src: "https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/3.4df853b4.png",
+    src: "/characters/character-3.webp",
     bg: "#E882B4",
     panel: "#ED9DC4",
   },
   {
-    src: "https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/4.4457fbce.png",
+    src: "/characters/character-4.webp",
     bg: "#6EB5FF",
     panel: "#8DC4FF",
   },
@@ -39,11 +39,6 @@ export default function Home() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    IMAGES.forEach(({ src }) => {
-      const image = new Image();
-      image.src = src;
-    });
-
     const updateViewport = () => setIsMobile(window.innerWidth < 640);
     updateViewport();
     window.addEventListener("resize", updateViewport);
@@ -134,8 +129,10 @@ export default function Home() {
           : isMobile
             ? "32%"
             : "12%",
-      transition: `transform 650ms ${EASING}, filter 650ms ${EASING}, opacity 650ms ${EASING}, left 650ms ${EASING}`,
-      willChange: "transform, filter, opacity",
+      transition: `transform 650ms ${EASING}, opacity 650ms ${EASING}, left 650ms ${EASING}`,
+      willChange: "transform, opacity, left",
+      contain: "layout paint",
+      backfaceVisibility: "hidden",
     };
   };
 
@@ -193,6 +190,11 @@ export default function Home() {
                   src={image.src}
                   alt={role === "center" ? `TOONHUB figurine ${index + 1}` : ""}
                   draggable={false}
+                  width={1350}
+                  height={1800}
+                  decoding="async"
+                  loading="eager"
+                  fetchPriority={role === "center" ? "high" : "low"}
                   className="h-full w-full"
                   style={{
                     objectFit: "contain",
