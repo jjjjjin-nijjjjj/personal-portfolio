@@ -2,7 +2,6 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Image from "next/image";
-import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowDown,
@@ -10,7 +9,6 @@ import {
   ArrowRight,
   Download,
   ExternalLink,
-  LineChart,
   Mail,
   MapPin,
   Menu,
@@ -20,6 +18,9 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { about, capabilities, capabilityHighlights, education, experience, navItems, personal, projects } from "@/constants/portfolio";
+import FlagshipShowcase from "@/components/projects/FlagshipShowcase";
+import ProjectIndex from "@/components/projects/ProjectIndex";
+import MagneticParticleBackground from "@/components/MagneticParticleBackground";
 
 const reveal = {
   hidden: { opacity: 0, y: 28 },
@@ -55,6 +56,76 @@ function SectionTitle({ eyebrow, children, light = false }: { eyebrow: string; c
       <span className={`eyebrow ${light ? "border-white/25 bg-white/10" : ""}`}>{eyebrow}</span>
       <h2 className="section-title">{children}</h2>
     </div>
+  );
+}
+
+function PinkPoseMascot() {
+  const [isCelebrating, setIsCelebrating] = useState(false);
+
+  useEffect(() => {
+    const sprite = new window.Image();
+    sprite.src = "/characters/pink_sprite.webp";
+  }, []);
+
+  const setCelebrating = (active: boolean) => setIsCelebrating(active);
+  const toggleCelebrating = () => setIsCelebrating((current) => !current);
+
+  const setPointerPose = (active: boolean, pointerType: string) => {
+    if (pointerType === "mouse") setCelebrating(active);
+  };
+
+  return (
+    <button
+      type="button"
+      className={`pose-mascot pose-mascot-pink ${isCelebrating ? "is-celebrating" : ""}`}
+      aria-label={isCelebrating ? "Pink mascot celebrating with raised arms" : "Animate the pink mascot"}
+      aria-pressed={isCelebrating}
+      onPointerEnter={(event) => setPointerPose(true, event.pointerType)}
+      onPointerLeave={(event) => setPointerPose(false, event.pointerType)}
+      onPointerUp={(event) => { if (event.pointerType !== "mouse") toggleCelebrating(); }}
+      onBlur={() => setCelebrating(false)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          toggleCelebrating();
+        }
+      }}
+    >
+      <span className="pink-sprite" aria-hidden="true" />
+    </button>
+  );
+}
+
+function BlueSpinMascot() {
+  const reduceMotion = useReducedMotion();
+  const [animationKey, setAnimationKey] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const trigger = () => {
+    if (reduceMotion || isAnimating) return;
+    setIsAnimating(true);
+    setAnimationKey((current) => current + 1);
+    window.setTimeout(() => setIsAnimating(false), 850);
+  };
+
+  return (
+    <button
+      type="button"
+      className="pose-mascot pose-mascot-blue"
+      aria-label="Spin the blue mascot"
+      onPointerEnter={(event) => { if (event.pointerType === "mouse") trigger(); }}
+      onClick={trigger}
+    >
+      <motion.span
+        key={animationKey}
+        className="pose-mascot-layer"
+        initial={{ rotateY: 0, scale: 1, y: 0 }}
+        animate={animationKey === 0 || reduceMotion ? { rotateY: 0, scale: 1, y: 0 } : { rotateY: [0, -12, 360], scale: [1, .97, 1.035, 1], y: [0, 5, -5, 0] }}
+        transition={{ duration: .82, times: [0, .16, .78, 1], ease: [0.22, 1, 0.36, 1] }}
+      >
+        <Image src="/characters/character-4.webp" alt="" fill unoptimized sizes="(max-width: 1024px) 90vw, 38vw" style={{ objectFit: "contain", objectPosition: "bottom" }} />
+      </motion.span>
+    </button>
   );
 }
 
@@ -200,11 +271,16 @@ export function Hero() {
 
 export function About() {
   return (
-    <section id="about" className="chapter-section section-shell soft-grid overflow-hidden">
-      <div className="chapter-grid">
-        <Reveal><SectionTitle eyebrow="About">{about.title}</SectionTitle><div className="mt-6 space-y-3">{about.paragraphs.map((paragraph) => <p className="body-copy" key={paragraph}>{paragraph}</p>)}</div><blockquote className="about-quote">“{about.quote}”</blockquote></Reveal>
-        <Reveal className="chapter-mascot" delay={.12}><div className="orange-scribble" /><Image src="/characters/character-3.webp" alt="Jiaying's cheerful 3D mascot" fill unoptimized sizes="(max-width: 1024px) 90vw, 42vw" style={{ objectFit: "contain", objectPosition: "bottom" }} /></Reveal>
+    <section id="about" className="chapter-section about-scene section-shell soft-grid overflow-hidden">
+      <div className="about-scene-intro">
+        <Reveal><span className="eyebrow">About</span><h2 className="about-statement"><span>I make</span><em>complex decisions</em><span>clear.</span></h2></Reveal>
+        <Reveal className="about-scene-mascot" delay={.1}><div className="orange-scribble" /><PinkPoseMascot /></Reveal>
       </div>
+      <div className="about-editorial">
+        <Reveal><p className="about-lead">{about.paragraphs[0]}</p></Reveal>
+        <Reveal className="about-columns" delay={.06}>{about.paragraphs.slice(1).map((paragraph) => <p className="body-copy" key={paragraph}>{paragraph}</p>)}</Reveal>
+      </div>
+      <Reveal><blockquote className="about-quote">“{about.quote}”</blockquote></Reveal>
       <div className="about-highlights">{capabilityHighlights.map((item, index) => <Reveal key={item.number} delay={index * .06}><article className="highlight-card"><span>{item.number}</span><h3>{item.title}</h3><p>{item.description}</p></article></Reveal>)}</div>
     </section>
   );
@@ -215,42 +291,45 @@ export function SkillsGrid() {
   const colors = ["#F47C4D", "#5F9B6B", "#5E91C7", "#D978A8", "#8B72B8"];
   const primaryCapabilities = new Set(["AI Agent Design", "Product Requirements", "Workflow Orchestration", "Credit Approval", "Risk Pricing", "Python", "SQL", "Product Delivery", "PRD"]);
   const abilityNodes = capabilities.flatMap((group, groupIndex) => group.items.map((item, itemIndex) => ({ item, group: group.title, groupIndex, itemIndex })));
-  const abilityRows = Array.from({ length: 6 }, (_, rowIndex) => abilityNodes.filter((_, index) => index % 6 === rowIndex));
+  const offsets = [[-8, 7], [5, -5], [-2, 10], [9, 2], [-6, -8], [7, 8], [-10, -1], [3, -10]];
   return (
     <section id="capabilities" className="chapter-section section-shell bg-white">
       <Reveal><div className="capability-heading-row"><SectionTitle eyebrow="How I work">Capabilities</SectionTitle><div className="capability-legend" aria-label="Filter capabilities by category"><button type="button" className={activeCapabilityGroup === null ? "is-active" : ""} onClick={() => setActiveCapabilityGroup(null)}>All</button>{capabilities.map((group, index) => <button type="button" className={activeCapabilityGroup === group.title ? "is-active" : ""} style={{ "--ability-color": colors[index] } as React.CSSProperties} onClick={() => setActiveCapabilityGroup(activeCapabilityGroup === group.title ? null : group.title)} key={group.number}><i aria-hidden="true" />{group.title}</button>)}</div></div></Reveal>
       <div className="capability-map" aria-label="All portfolio capabilities">
         <div className="capability-map-orbit" aria-hidden="true" />
-        {abilityRows.map((row, rowIndex) => <div className="ability-row" style={{ "--row-shift": `${[2, 7, 0, 5, 9, 3][rowIndex]}%` } as React.CSSProperties} key={rowIndex}>{row.map((node) => {
-          const index = abilityNodes.indexOf(node);
+        {abilityNodes.map((node, index) => {
           const isDimmed = activeCapabilityGroup !== null && activeCapabilityGroup !== node.group;
           const importance = primaryCapabilities.has(node.item) ? "ability-node-core" : node.item.length < 13 ? "ability-node-medium" : "ability-node-small";
-          return <motion.div className={`ability-node ${importance} ${isDimmed ? "is-dimmed" : ""}`} style={{ "--ability-color": colors[node.groupIndex], "--ability-x": `${((index * 17) % 11) - 5}px`, "--ability-y": `${((index * 11) % 9) - 4}px`, "--ability-delay": `${(index % 9) * -.45}s` } as React.CSSProperties} initial={{ opacity: 0, scale: .65, y: 24 }} whileInView={{ opacity: isDimmed ? .16 : 1, scale: 1, y: 0 }} viewport={{ once: true, amount: .15 }} animate={{ opacity: isDimmed ? .16 : 1 }} transition={{ duration: .5, delay: Math.min(index * .018, .45), ease: [0.22, 1, 0.36, 1] }} key={`${node.group}-${node.item}`}><span className="ability-node-inner"><i aria-hidden="true" />{node.item}</span><small>{node.group}</small></motion.div>;
-        })}</div>)}
+          const [x, y] = offsets[index % offsets.length];
+          return <motion.div className={`ability-node ${importance} ${isDimmed ? "is-dimmed" : ""}`} style={{ "--ability-color": colors[node.groupIndex], "--ability-x": `${x}px`, "--ability-y": `${y}px`, "--ability-delay": `${(index % 9) * -.45}s` } as React.CSSProperties} initial={{ opacity: 0, scale: .65, y: 24 }} whileInView={{ opacity: isDimmed ? .16 : 1, scale: 1, y: 0 }} viewport={{ once: true, amount: .15 }} animate={{ opacity: isDimmed ? .16 : 1 }} transition={{ duration: .5, delay: Math.min(index * .018, .45), ease: [0.22, 1, 0.36, 1] }} key={`${node.group}-${node.item}`}><span className="ability-node-inner"><i aria-hidden="true" />{node.item}</span><small>{node.group}</small></motion.div>;
+        })}
       </div>
     </section>
   );
 }
 
 export function Projects() {
-  const renderProject = (project: (typeof projects)[number], duplicate = false) => {
-    const index = projects.indexOf(project);
-    return <article className={`project-card marquee-card ${index < 2 ? "project-card-featured" : ""}`} key={`${duplicate ? "copy-" : ""}${project.slug}`} aria-hidden={duplicate || undefined}><div className="project-visual" style={{ background: project.color }}><span>{project.number}</span><small>{index < 2 ? "FLAGSHIP" : "EARLIER WORK"}</small><LineChart aria-hidden="true" /></div><div className="p-5"><span className="project-category">{project.category}</span><h3>{project.title}</h3><p>{project.description}</p>{project.result && <strong className="project-result">{project.result}</strong>}<div className="project-tags">{project.tags.slice(0, 3).map(tag => <span className="tag" key={tag}>{tag}</span>)}</div>{!duplicate && (index < 2 ? <Link className="project-link" href={`/projects/${project.slug}`}>View Case Study <ArrowRight /></Link> : project.href ? <a className="project-link" href={project.href} target="_blank" rel="noreferrer">View Project <ExternalLink /></a> : <span className="project-link project-link-muted">Earlier Work</span>)}</div></article>;
-  };
+  const flagshipProjects = projects.slice(0, 1);
+  const additionalProjects = projects.slice(1);
   return (
-    <section id="projects" className="chapter-section section-shell bg-cream">
-      <Reveal><SectionTitle eyebrow="AI product, strategy & research">Selected work</SectionTitle></Reveal>
-      <div className="project-marquee" role="region" aria-label="Selected projects marquee"><div className="project-marquee-track"><div className="project-marquee-set">{projects.map(project => renderProject(project))}</div><div className="project-marquee-set" aria-hidden="true">{projects.map(project => renderProject(project, true))}</div></div></div>
+    <section id="projects" className="projects-section section-shell bg-cream">
+      <Reveal><div className="projects-intro"><SectionTitle eyebrow="AI products & risk solutions">Projects</SectionTitle><p>Intelligent systems shaped through product thinking, risk strategy and measurable delivery.</p></div></Reveal>
+      <FlagshipShowcase projects={flagshipProjects} />
+      <ProjectIndex projects={additionalProjects} />
     </section>
   );
 }
 
 export function Timeline() {
   return (
-    <section id="experience" className="chapter-section section-shell soft-grid overflow-hidden">
-      <div className="chapter-grid">
-        <Reveal><SectionTitle eyebrow="My professional journey">Experience</SectionTitle><div className="timeline timeline-compact">{experience.map((item, index) => <motion.article className="timeline-item" initial={{ opacity: 0, x: -18 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: index * .1 }} key={item.period}><span>{item.period}</span><div><h3>{item.company}</h3><strong>{item.role}</strong><p>{item.summary}</p><ul>{item.responsibilities.map(point => <li key={point}>{point}</li>)}</ul>{item.highlights && <div className="timeline-highlights">{item.highlights.map(highlight => <span key={highlight}>{highlight}</span>)}</div>}</div></motion.article>)}</div></Reveal>
-        <Reveal className="chapter-mascot" delay={.1}><Image src="/characters/character-4.webp" alt="Jiaying's focused blue 3D mascot" fill unoptimized sizes="(max-width: 1024px) 80vw, 38vw" style={{ objectFit: "contain", objectPosition: "bottom" }} /></Reveal>
+    <section id="experience" className="experience-section section-shell soft-grid overflow-hidden">
+      <Reveal><div className="experience-heading"><SectionTitle eyebrow="My professional journey">Experience</SectionTitle><p>Building intelligent decision products from strategy and workflow design through launch, measurement and iteration.</p></div></Reveal>
+      <div className="experience-editorial">
+        <div className="experience-timeline">
+          <motion.div className="experience-line" initial={{ scaleY: 0 }} whileInView={{ scaleY: 1 }} viewport={{ once: true, amount: .15 }} transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }} aria-hidden="true" />
+          {experience.map((item, index) => <motion.article className="experience-entry" initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .2 }} transition={{ duration: .55, delay: index * .08, ease: [0.22, 1, 0.36, 1] }} key={item.period}><span className="experience-dot" aria-hidden="true" /><div className="experience-period">{item.period}</div><div className="experience-card"><span>{index === 0 ? "CURRENT ROLE" : index === 1 ? "PREVIOUS ROLE" : "EDUCATION"}</span><h3>{item.company}</h3><strong>{item.role}</strong><p>{item.summary}</p><ul>{item.responsibilities.map(point => <li key={point}>{point}</li>)}</ul>{item.highlights && <div className="experience-results">{item.highlights.map(highlight => <span key={highlight}>{highlight}</span>)}</div>}</div></motion.article>)}
+        </div>
+        <Reveal className="experience-mascot" delay={.08}><span>PRODUCT<br />× STRATEGY</span><BlueSpinMascot /></Reveal>
       </div>
     </section>
   );
@@ -266,10 +345,11 @@ export function Education() {
 
 export function ContactForm() {
   return (
-    <section id="contact" className="chapter-section section-shell contact-section overflow-hidden">
-      <div className="grid items-center gap-10 lg:grid-cols-[.85fr_1.15fr]">
-        <Reveal><SectionTitle eyebrow="Let’s work together" light>Let’s connect</SectionTitle><p className="mt-5 max-w-md text-lg text-white/80">Let’s build intelligent products that make complex decisions easier.</p><div className="mt-8 space-y-3 text-white"><a className="contact-link" href={`mailto:${personal.email}`}><Mail /> {personal.email}</a><span className="contact-link"><MapPin /> {personal.location}</span><span className="contact-link"><Phone /> {personal.phoneDisplay}</span><a className="button button-light mt-3" href={`mailto:${personal.email}`}>Email Me <ArrowRight /></a><a className="button button-ghost mt-3 ml-3" href="/Jiaying-Jin-Resume.pdf" download>Download Resume <Download /></a></div></Reveal>
-        <Reveal className="relative min-h-[480px]" delay={.1}><div className="speech-bubble">Let’s build<br />something<br />meaningful.</div><Image src="/characters/character-2.webp" alt="Jiaying's welcoming green 3D mascot" fill unoptimized sizes="(max-width: 1024px) 90vw, 50vw" style={{ objectFit: "contain", objectPosition: "bottom" }} /></Reveal>
+    <section id="contact" className="contact-section overflow-hidden">
+      <div className="contact-grid" aria-hidden="true" />
+      <div className="contact-scene section-shell">
+        <Reveal className="contact-copy"><span className="eyebrow border-white/25 bg-white/10">Let’s work together</span><h2>Let’s build<br /><em>intelligent</em><br />products.</h2><p>Let’s build intelligent products that make complex decisions easier.</p><div className="contact-details"><a className="contact-link" href={`mailto:${personal.email}`}><Mail /> {personal.email}</a><span className="contact-link"><MapPin /> {personal.location}</span><span className="contact-link"><Phone /> {personal.phoneDisplay}</span></div><div className="contact-actions"><a className="button button-light" href={`mailto:${personal.email}`}>Email Me <ArrowRight /></a><a className="button button-ghost" href="/Jiaying-Jin-Resume.pdf" download>Download Resume <Download /></a></div></Reveal>
+        <Reveal className="contact-mascot" delay={.1}><div className="speech-bubble">Let’s work<br />together!</div><Image src="/characters/character-2.webp" alt="Jiaying's welcoming green 3D mascot" fill unoptimized sizes="(max-width: 1024px) 100vw, 52vw" style={{ objectFit: "contain", objectPosition: "bottom" }} /></Reveal>
       </div>
     </section>
   );
@@ -280,5 +360,5 @@ export function Footer() {
 }
 
 export default function Portfolio() {
-  return <><Header /><main className="portfolio-main"><Hero /><About /><Timeline /><Projects /><SkillsGrid /><Playground /><Education /><ContactForm /></main><Footer /></>;
+  return <><Header /><main className="portfolio-main"><Hero /><div className="particle-zone"><MagneticParticleBackground /><div className="particle-zone-content"><About /><Timeline /><Projects /><SkillsGrid /><Playground /><Education /></div></div><ContactForm /></main><Footer /></>;
 }
